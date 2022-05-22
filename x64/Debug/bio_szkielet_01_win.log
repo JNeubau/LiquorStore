@@ -1,0 +1,15 @@
+﻿  cube.cpp
+  main_file.cpp
+C:\Users\s0403399\Downloads\bio_szkielet_01_win\bio_szkielet_01_win\model.h(24,10): fatal error C1083: Nie można otworzyć pliku dołącz: 'GL/glew.h': No such file or directory
+  model.cpp
+C:\Users\s0403399\Downloads\bio_szkielet_01_win\bio_szkielet_01_win\main_file.cpp(22,10): fatal error C1083: Nie można otworzyć pliku dołącz: 'GL/glew.h': No such file or directory
+  shaderprogram.cpp
+C:\Users\s0403399\Downloads\bio_szkielet_01_win\bio_szkielet_01_win\model.h(24,10): fatal error C1083: Nie można otworzyć pliku dołącz: 'GL/glew.h': No such file or directory
+  sphere.cpp
+C:\Users\s0403399\Downloads\bio_szkielet_01_win\bio_szkielet_01_win\shaderprogram.h(25,10): fatal error C1083: Nie można otworzyć pliku dołącz: 'GL/glew.h': No such file or directory
+  teapot.cpp
+C:\Users\s0403399\Downloads\bio_szkielet_01_win\bio_szkielet_01_win\model.h(24,10): fatal error C1083: Nie można otworzyć pliku dołącz: 'GL/glew.h': No such file or directory
+  torus.cpp
+C:\Users\s0403399\Downloads\bio_szkielet_01_win\bio_szkielet_01_win\model.h(24,10): fatal error C1083: Nie można otworzyć pliku dołącz: 'GL/glew.h': No such file or directory
+  Generowanie kodu...
+C:\Users\s0403399\Downloads\bio_szkielet_01_win\bio_szkielet_01_win\model.h(24,10): fatal error C1083: Nie można otworzyć pliku dołącz: 'GL/glew.h': No such file or directory
