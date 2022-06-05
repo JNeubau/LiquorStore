@@ -1,3 +1,4 @@
 C:\Users\Asia\Desktop\bio_szkielet_01_win\bio_szkielet_01_win\bio_szkielet_01_win\Debug\bio_szkielet_01_win.exe
 C:\Users\neuba\Downloads\zad.dom(lab2)\Debug\bio_szkielet_01_win.exe
 C:\Users\Asia\Desktop\OneDrive_2022-04-05\zad (1).dom(lab2)\Debug\bio_szkielet_01_win.exe
+C:\Users\patka\Grafika - projekt\LiquorStore\Debug\bio_szkielet_01_win.exe

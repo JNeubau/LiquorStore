@@ -1,5 +1,6 @@
 #define GLM_FORCE_RADIANS
 
+#include <iostream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -12,13 +13,24 @@
 #include "lodepng.h"
 #include "shaderprogram.h"
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
+using namespace std;
+
 float speed_x = 0;//[radiany/s]
 float speed_y = 0;//[radiany/s]
 float speed_walk = 0;
 
+GLuint tex;
 
 glm::vec3 pos = glm::vec3(0, 1, -10);
 
+std::vector<glm::vec4> verts;
+std::vector<glm::vec4> norms;
+std::vector<glm::vec2> texCoords;
+std::vector<unsigned int> indices;
 
 glm::vec3 computeDir(float kat_x, float kat_y) {
 	glm::vec4 dir(0, 0, 1, 0);
@@ -53,6 +65,52 @@ void key_callback(
 		if (key == GLFW_KEY_PAGE_DOWN) speed_x = 0;
 	}
 }
+void loadModel(string filename)
+{
+	Assimp::Importer importer;
+	const aiScene* scene = importer.ReadFile(filename, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals);
+	cout << importer.GetErrorString() << endl;
+
+	/*if (scene->HasMeshes())
+	{
+		for (int i = 0; i < scene->mNumMeshes; i++)
+		{
+			importMesh(scene->mMeshes[i]);
+		}
+	}*/
+
+	aiMesh* mesh = scene->mMeshes[0];
+
+	for (int i = 0; i < mesh->mNumVertices; i++)
+	{
+		aiVector3D vertex = mesh->mVertices[i];
+		//cout << vertex.x << " " << vertex.y << " " << vertex.z << endl;
+		verts.push_back(glm::vec4(vertex.x, vertex.y, vertex.z, 1));
+
+		aiVector3D normal = mesh->mNormals[i];
+		//cout << normal.x << " " << normal.y << " " << normal.z << endl;
+		norms.push_back(glm::vec4(normal.x, normal.y, normal.z, 0));
+
+
+		unsigned int number_of_sets = mesh->GetNumUVChannels();
+		unsigned int number_of_tex = mesh->mNumUVComponents[0];
+		aiVector3D texCoord = mesh->mTextureCoords[0][i];
+		texCoords.push_back(glm::vec2(texCoord.x, texCoord.y));
+
+		//cout << texCoord.x << " " << texCoord.y << endl;
+	}
+
+	for (int i = 0; i < mesh->mNumFaces; i++) {
+		aiFace& face = mesh->mFaces[i];
+
+		for (int j = 0; j < face.mNumIndices; j++)
+		{
+			indices.push_back(face.mIndices[j]);
+		}
+		//cout << endl;
+	}
+}
+
 //Procedura obsługi błędów
 void error_callback(int error, const char* description) {
 	fputs(description, stderr);
@@ -74,6 +132,35 @@ void freeOpenGLProgram(GLFWwindow* window) {
 	//************Tutaj umieszczaj kod, który należy wykonać po zakończeniu pętli głównej************
 }
 
+
+
+void texRack(glm::mat4 P, glm::mat4 V, glm::mat4 M)
+{
+	spLambert->use();
+	glUniformMatrix4fv(spLambert->u("P"), 1, false, glm::value_ptr(P));
+	glUniformMatrix4fv(spLambert->u("V"), 1, false, glm::value_ptr(V));
+	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M));
+
+	glEnableVertexAttribArray(spLambert->a("vertex"));
+	glVertexAttribPointer(spLambert->a("vertex"), 4, GL_FLOAT, false, 0, verts.data());
+
+	glEnableVertexAttribArray(spLambert->a("texCoord"));
+	glVertexAttribPointer(spLambert->a("texCoord"), 2, GL_FLOAT, false, 0, texCoords.data());
+
+	glEnableVertexAttribArray(spLambert->a("normal"));
+	glVertexAttribPointer(spLambert->a("normal"), 4, GL_FLOAT, false, 0, norms.data());
+
+	glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, tex);
+	glUniform1i(spLambert->u("tex"), 0);
+
+	//glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, indices.data());
+
+	glDisableVertexAttribArray(spLambert->a("vertex"));
+	glDisableVertexAttribArray(spLambert->a("texCoord"));
+	glDisableVertexAttribArray(spLambert->a("normal"));
+
+}
 //Procedura rysująca zawartość sceny
 void drawScene(GLFWwindow* window, float kat_x, float kat_y) {
 	//************Tutaj umieszczaj kod rysujący obraz******************l
@@ -81,20 +168,22 @@ void drawScene(GLFWwindow* window, float kat_x, float kat_y) {
 
 
 	glm::mat4 V = glm::lookAt(pos, pos + computeDir(kat_x, kat_y), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
-	glm::mat4 P = glm::perspective(glm::radians(50.0f), 1.0f, 0.1f, 50.0f); //Wylicz macierz rzutowania
+	glm::mat4 P = glm::perspective(glm::radians(50.0f), 1.0f, 0.1f, -100.0f); //Wylicz macierz rzutowania
 
 	spLambert->use(); //Aktyeuj program cieniujący
 
 	glUniformMatrix4fv(spLambert->u("P"), 1, false, glm::value_ptr(P)); //Załaduj do programu cieniującego macierz rzutowania
 	glUniformMatrix4fv(spLambert->u("V"), 1, false, glm::value_ptr(V)); //Załaduj do programu cieniującego macierz widoku
 
-
+	loadModel("etagereEnfant.obj");
 	glm::mat4 M1 = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
-	M1 = glm::translate(M1, glm::vec3(4, 3, 0));
-	M1 = glm::scale(M1, glm::vec3(1, 3, 1));
+	//M1 = glm::translate(M1, glm::vec3(4, 3, 0));
+	M1 = glm::scale(M1, glm::vec3(0.08, 0.03, 0.01));
 	glUniform4f(spLambert->u("color"), 0, 1, 0, 1); //Ustaw kolor rysowania obiektu
 	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M1)); //Załaduj do programu cieniującego macierz modelu
-	Models::cube.drawSolid(); //Narysuj obiekt
+	//Models::cube.drawSolid(); //Narysuj obiekt
+	loadModel("etagereEnfant.obj");
+	texRack(P, V, M1);
 
 
 	glm::mat4 M2 = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
