@@ -25,7 +25,7 @@ float speed_walk = 0;
 
 GLuint tex;
 
-glm::vec3 pos = glm::vec3(0, 1, -10);
+glm::vec3 pos = glm::vec3(0, 1, -5);
 
 std::vector<glm::vec4> verts;
 std::vector<glm::vec4> norms;
@@ -53,7 +53,7 @@ void key_callback(
 		if (key == GLFW_KEY_RIGHT) speed_y = -1;
 		if (key == GLFW_KEY_PAGE_UP) speed_x = -1;
 		if (key == GLFW_KEY_PAGE_DOWN) speed_x = 1;
-		if (key == GLFW_KEY_UP) speed_walk = 2;
+		if (key == GLFW_KEY_UP) speed_walk = 4;
 		if (key == GLFW_KEY_DOWN) speed_walk = -2;
 	}
 	if (action == GLFW_RELEASE) {
@@ -161,6 +161,69 @@ void texRack(glm::mat4 P, glm::mat4 V, glm::mat4 M)
 	glDisableVertexAttribArray(spLambert->a("normal"));
 
 }
+
+
+void drawDoor(glm::mat4 M) {
+	cout << "Door\n";
+}
+
+
+void drawFloor(glm::mat4 M) {
+	cout << "Floor\n";
+}
+
+
+// draw a Wall, with given size
+void drawWall(glm::mat4 M, float width, float hight, float thickness) {
+	glm::mat4 MW = glm::scale(M, glm::vec3(width/2, hight/2, thickness/2));
+	glUniform4f(spLambert->u("color"), 1, 1, 0, 1);
+	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(MW));
+	Models::cube.drawSolid();
+}
+
+
+void drawRoom() {
+	glm::mat4 MR = glm::mat4(1.0f);
+
+	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, 14.0f));
+	drawWall(MR, 16, 5, 0.5);
+	
+	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, -12.0f));
+	MR = glm::rotate(MR, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, 8.0f));
+	drawWall(MR, 24, 5, 0.5);
+
+	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, -8.0f));
+	MR = glm::rotate(MR, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, 12.0f));
+	drawWall(MR, 16, 5, 0.5);
+
+	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, -12.0f));
+	MR = glm::rotate(MR, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, 8.0f));
+	drawWall(MR, 24, 5, 0.5);
+}
+
+
+//void drawKostka(glm::mat4 M, float a, float b, float c) {
+	//	glm::mat4 Mk = glm::scale(M, glm::vec3(a / 2, b / 2, c / 2));
+	//	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(Mk));
+	//	glUniform4f(spLambert->u("color"), 0, 1, 0, 1);
+	//	Models::cube.drawSolid();
+
+// glm::mat4 MD, float angle, int num_segments) {
+//	MD = glm::translate(MD, glm::vec3(0.5f, 0.0f, 0.0f));
+//	MD = glm::rotate(MD, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+//	MD = glm::translate(MD, glm::vec3(1.0f, 0.0f, 0.0f));
+//	drawKostka(MD, 2.0, 0.5, 1.0);
+//	for (int i = 0; i < num_segments - 1; i++) {
+//		MD = glm::translate(MD, glm::vec3(1.0f, 0.0f, 0.0f));
+//		drawJoint(MD);
+//		MD = glm::rotate(MD, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+//		MD = glm::translate(MD, glm::vec3(1.0f, 0.0f, 0.0f));
+//		drawKostka(MD, 2.0, 0.5, 1.0);
+
+
 //Procedura rysująca zawartość sceny
 void drawScene(GLFWwindow* window, float kat_x, float kat_y) {
 	//************Tutaj umieszczaj kod rysujący obraz******************l
@@ -175,6 +238,7 @@ void drawScene(GLFWwindow* window, float kat_x, float kat_y) {
 	glUniformMatrix4fv(spLambert->u("P"), 1, false, glm::value_ptr(P)); //Załaduj do programu cieniującego macierz rzutowania
 	glUniformMatrix4fv(spLambert->u("V"), 1, false, glm::value_ptr(V)); //Załaduj do programu cieniującego macierz widoku
 
+	/*
 	loadModel("etagereEnfant.obj");
 	glm::mat4 M1 = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
 	//M1 = glm::translate(M1, glm::vec3(4, 3, 0));
@@ -183,9 +247,12 @@ void drawScene(GLFWwindow* window, float kat_x, float kat_y) {
 	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M1)); //Załaduj do programu cieniującego macierz modelu
 	//Models::cube.drawSolid(); //Narysuj obiekt
 	loadModel("etagereEnfant.obj");
-	texRack(P, V, M1);
+	texRack(P, V, M1); */
 
+	glm::mat4 MWall = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
+	drawRoom();
 
+	/*
 	glm::mat4 M2 = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
 	M2 = glm::translate(M2, glm::vec3(-4, 2, 0));
 	M2 = glm::scale(M2, glm::vec3(1.5, 2, 1));
@@ -211,7 +278,7 @@ void drawScene(GLFWwindow* window, float kat_x, float kat_y) {
 	M5 = glm::translate(M5, glm::vec3(0, 0.9f, 0));
 	glUniform4f(spLambert->u("color"), 1, 0, 0, 1); //Ustaw kolor rysowania obiektu
 	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M5)); //Załaduj do programu cieniującego macierz modelu
-	Models::teapot.drawSolid(); //Narysuj obiekt
+	Models::teapot.drawSolid(); //Narysuj obiekt */
 
 	glfwSwapBuffers(window); //Skopiuj bufor tylny do bufora przedniego
 }
