@@ -1,4 +1,5 @@
 #define GLM_FORCE_RADIANS
+#define GLM_FORCE_SWIZZLE
 
 #include <iostream>
 #include <GL/glew.h>
@@ -22,8 +23,24 @@ using namespace std;
 float speed_x = 0;//[radiany/s]
 float speed_y = 0;//[radiany/s]
 float speed_walk = 0;
+float aspectRatio = 1;
+
+glm::mat4 V, P;
+
+ShaderProgram* sp;
 
 GLuint tex;
+GLuint texWall0, texWall1, texWall2;
+
+float* verticesCube = myCubeVertices;
+float* normalsCube = myCubeNormals;
+float* texCoordsCube = myCubeTexCoords;
+float* colorsCube = myCubeColors;
+int vertexCountCube = myCubeVertexCount;
+
+float* c1 = myCubeC1;
+float* c2 = myCubeC2;
+float* c3 = myCubeC3;
 
 glm::vec3 pos = glm::vec3(0, 1, -5);
 
@@ -65,6 +82,15 @@ void key_callback(
 		if (key == GLFW_KEY_PAGE_DOWN) speed_x = 0;
 	}
 }
+
+
+void windowResizeCallback(GLFWwindow* window, int width, int height) {
+	if (height == 0) return;
+	aspectRatio = (float)width / (float)height;
+	glViewport(0, 0, width, height);
+}
+
+
 void loadModel(string filename)
 {
 	Assimp::Importer importer;
@@ -116,13 +142,43 @@ void error_callback(int error, const char* description) {
 	fputs(description, stderr);
 }
 
+
+GLuint readTexture(const char* filename) {
+	GLuint tex;
+	glActiveTexture(GL_TEXTURE0);
+
+	//Wczytanie do pamięci komputera
+	std::vector<unsigned char> image;   //Alokuj wektor do wczytania obrazka
+	unsigned width, height;   //Zmienne do których wczytamy wymiary obrazka
+	//Wczytaj obrazek
+	unsigned error = lodepng::decode(image, width, height, filename);
+
+	//Import do pamięci karty graficznej
+	glGenTextures(1, &tex); //Zainicjuj jeden uchwyt
+	glBindTexture(GL_TEXTURE_2D, tex); //Uaktywnij uchwyt
+	//Wczytaj obrazek do pamięci KG skojarzonej z uchwytem
+	glTexImage2D(GL_TEXTURE_2D, 0, 4, width, height, 0,
+		GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char*)image.data());
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	return tex;
+}
+
+
 //Procedura inicjująca
 void initOpenGLProgram(GLFWwindow* window) {
 	initShaders();
 	//************Tutaj umieszczaj kod, który należy wykonać raz, na początku programu************
 	glClearColor(0, 0, 0, 1); //Ustaw kolor czyszczenia bufora kolorów
 	glEnable(GL_DEPTH_TEST); //Włącz test głębokości na pikselach
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
 	glfwSetKeyCallback(window, key_callback);
+
+	texWall0 = readTexture("pics/bricks2_diffuse.png");
+	texWall1 = readTexture("pics/bricks2_normal.png");
+	texWall2 = readTexture("pics/bricks2_height.png");
 }
 
 
@@ -130,6 +186,7 @@ void initOpenGLProgram(GLFWwindow* window) {
 void freeOpenGLProgram(GLFWwindow* window) {
 	freeShaders();
 	//************Tutaj umieszczaj kod, który należy wykonać po zakończeniu pętli głównej************
+	glDeleteTextures(1, &tex);
 }
 
 
@@ -167,27 +224,91 @@ void drawDoor(glm::mat4 M) {
 	cout << "Door\n";
 }
 
-
+// narysuj podłogę;
 void drawFloor(glm::mat4 M) {
-	cout << "Floor\n";
+	float width=16, hight=24, thickness=0.5;
+	glm::mat4 MF = glm::rotate(M, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	MF = glm::translate(MF, glm::vec3(0.0f, 0.0f, 2.5f));
+	MF = glm::scale(MF, glm::vec3(width / 2, hight / 2, thickness / 2));
+	glUniform4f(spLambert->u("color"), 1, 1, 0, 1);
+	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(MF));
+	//Models::cube.drawSolid();
 }
 
 
-// draw a Wall, with given size
-void drawWall(glm::mat4 M, float width, float hight, float thickness) {
-	glm::mat4 MW = glm::scale(M, glm::vec3(width/2, hight/2, thickness/2));
+// narysuj sufit;
+void drawCeiling(glm::mat4 M) {
+	float width = 16, hight = 24, thickness = 0.5;
+	glm::mat4 MF = glm::rotate(M, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	MF = glm::translate(MF, glm::vec3(0.0f, 0.0f, 2.5f));
+	MF = glm::scale(MF, glm::vec3(width / 2, hight / 2, thickness / 2));
 	glUniform4f(spLambert->u("color"), 1, 1, 0, 1);
-	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(MW));
-	Models::cube.drawSolid();
+	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(MF));
+	//Models::cube.drawSolid();
+}
+
+
+// narysuj ścianę o danej wielkości w przesłanej macierzy
+void drawWall(glm::mat4 M, float width, float hight, float thickness) {
+
+	glm::mat4 MW = glm::scale(M, glm::vec3(width/2, hight/2, thickness/2));
+	//glUniform4f(spLambert->u("color"), 1, 1, 0, 1);
+	//glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(MW));
+
+	spLambertTextured->use();
+	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P));
+	glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(V));
+	glUniformMatrix4fv(sp->u("M"), 1, false, glm::value_ptr(MW));
+
+	glEnableVertexAttribArray(sp->a("vertex"));  //Włącz przesyłanie danych do atrybutu vertex
+	glVertexAttribPointer(sp->a("vertex"), 4, GL_FLOAT, false, 0, verticesCube); //Wskaż tablicę z danymi dla atrybutu vertex
+
+	glEnableVertexAttribArray(sp->a("texCoord0"));  //Włącz przesyłanie danych do atrybutu texCoord
+	glVertexAttribPointer(sp->a("texCoord0"), 2, GL_FLOAT, false, 0, texCoordsCube); //Wskaż tablicę z danymi dla atrybutu texCoord
+
+	glEnableVertexAttribArray(sp->a("c1"));  //Włącz przesyłanie danych do atrybutu normal
+	glVertexAttribPointer(sp->a("c1"), 4, GL_FLOAT, false, 0, c1); //Wskaż tablicę z danymi dla atrybutu normal
+
+	glEnableVertexAttribArray(sp->a("c2"));  //Włącz przesyłanie danych do atrybutu normal
+	glVertexAttribPointer(sp->a("c2"), 4, GL_FLOAT, false, 0, c2); //Wskaż tablicę z danymi dla atrybutu normal
+
+	glEnableVertexAttribArray(sp->a("c3"));  //Włącz przesyłanie danych do atrybutu normal
+	glVertexAttribPointer(sp->a("c3"), 4, GL_FLOAT, false, 0, c3); //Wskaż tablicę z danymi dla atrybutu normal
+
+	glUniform1i(sp->u("textureMap0"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texWall0);
+
+	glUniform1i(sp->u("textureMap1"), 1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texWall1);
+
+	glUniform1i(sp->u("textureMap2"), 2);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, texWall2);
+
+	glDrawArrays(GL_TRIANGLES, 0, vertexCountCube); //Narysuj obiekt
+
+	glDisableVertexAttribArray(sp->a("vertex"));  //Wyłącz przesyłanie danych do atrybutu vertex
+	glDisableVertexAttribArray(sp->a("texCoord0"));  //Wyłącz przesyłanie danych do atrybutu texCoord0
+	glDisableVertexAttribArray(sp->a("c1"));  //Wyłącz przesyłanie danych do atrybutu normal
+	glDisableVertexAttribArray(sp->a("c2"));  //Wyłącz przesyłanie danych do atrybutu normal
+	glDisableVertexAttribArray(sp->a("c3"));  //Wyłącz przesyłanie danych do atrybutu normal
 }
 
 
 void drawRoom() {
 	glm::mat4 MR = glm::mat4(1.0f);
 
-	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, 14.0f));
+	// narysuj podłogę i sufit
+	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, 2.0f));
+	//drawFloor(MR);
+	//drawCeiling(MR);
+
+	// narysuj ściany
+	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, 12.0f));
 	drawWall(MR, 16, 5, 0.5);
-	
+	/*
 	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, -12.0f));
 	MR = glm::rotate(MR, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, 8.0f));
@@ -202,26 +323,61 @@ void drawRoom() {
 	MR = glm::rotate(MR, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, 8.0f));
 	drawWall(MR, 24, 5, 0.5);
+	*/
 }
 
 
-//void drawKostka(glm::mat4 M, float a, float b, float c) {
-	//	glm::mat4 Mk = glm::scale(M, glm::vec3(a / 2, b / 2, c / 2));
-	//	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(Mk));
-	//	glUniform4f(spLambert->u("color"), 0, 1, 0, 1);
-	//	Models::cube.drawSolid();
+void drawTest() {
+	glm::mat4 M = glm::mat4(1.0f);
 
-// glm::mat4 MD, float angle, int num_segments) {
-//	MD = glm::translate(MD, glm::vec3(0.5f, 0.0f, 0.0f));
-//	MD = glm::rotate(MD, angle, glm::vec3(0.0f, 0.0f, 1.0f));
-//	MD = glm::translate(MD, glm::vec3(1.0f, 0.0f, 0.0f));
-//	drawKostka(MD, 2.0, 0.5, 1.0);
-//	for (int i = 0; i < num_segments - 1; i++) {
-//		MD = glm::translate(MD, glm::vec3(1.0f, 0.0f, 0.0f));
-//		drawJoint(MD);
-//		MD = glm::rotate(MD, angle, glm::vec3(0.0f, 0.0f, 1.0f));
-//		MD = glm::translate(MD, glm::vec3(1.0f, 0.0f, 0.0f));
-//		drawKostka(MD, 2.0, 0.5, 1.0);
+	sp->use();
+	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P));
+	glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(V));
+	glUniformMatrix4fv(sp->u("M"), 1, false, glm::value_ptr(M));
+
+	glEnableVertexAttribArray(sp->a("vertex"));  //Włącz przesyłanie danych do atrybutu vertex
+	glVertexAttribPointer(sp->a("vertex"), 4, GL_FLOAT, false, 0, verticesCube); //Wskaż tablicę z danymi dla atrybutu vertex
+
+	//glEnableVertexAttribArray(sp->a("color"));  //Włącz przesyłanie danych do atrybutu color
+	//glVertexAttribPointer(sp->a("color"), 4, GL_FLOAT, false, 0, colors); //Wskaż tablicę z danymi dla atrybutu color
+
+	//glEnableVertexAttribArray(sp->a("normal"));  //Włącz przesyłanie danych do atrybutu normal
+	//glVertexAttribPointer(sp->a("normal"), 4, GL_FLOAT, false, 0, normals); //Wskaż tablicę z danymi dla atrybutu normal
+
+	glEnableVertexAttribArray(sp->a("texCoord0"));  //Włącz przesyłanie danych do atrybutu texCoord
+	glVertexAttribPointer(sp->a("texCoord0"), 2, GL_FLOAT, false, 0, texCoordsCube); //Wskaż tablicę z danymi dla atrybutu texCoord
+
+	glEnableVertexAttribArray(sp->a("c1"));  //Włącz przesyłanie danych do atrybutu normal
+	glVertexAttribPointer(sp->a("c1"), 4, GL_FLOAT, false, 0, c1); //Wskaż tablicę z danymi dla atrybutu normal
+
+	glEnableVertexAttribArray(sp->a("c2"));  //Włącz przesyłanie danych do atrybutu normal
+	glVertexAttribPointer(sp->a("c2"), 4, GL_FLOAT, false, 0, c2); //Wskaż tablicę z danymi dla atrybutu normal
+
+	glEnableVertexAttribArray(sp->a("c3"));  //Włącz przesyłanie danych do atrybutu normal
+	glVertexAttribPointer(sp->a("c3"), 4, GL_FLOAT, false, 0, c3); //Wskaż tablicę z danymi dla atrybutu normal
+
+	glUniform1i(sp->u("textureMap0"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texWall0);
+
+	glUniform1i(sp->u("textureMap1"), 1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texWall1);
+
+	glUniform1i(sp->u("textureMap2"), 2);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, texWall2);
+
+	glDrawArrays(GL_TRIANGLES, 0, vertexCountCube); //Narysuj obiekt
+
+	glDisableVertexAttribArray(sp->a("vertex"));  //Wyłącz przesyłanie danych do atrybutu vertex
+	//glDisableVertexAttribArray(sp->a("color"));  //Wyłącz przesyłanie danych do atrybutu color
+	//glDisableVertexAttribArray(sp->a("normal"));  //Wyłącz przesyłanie danych do atrybutu normal
+	glDisableVertexAttribArray(sp->a("texCoord0"));  //Wyłącz przesyłanie danych do atrybutu texCoord0
+	glDisableVertexAttribArray(sp->a("c1"));  //Wyłącz przesyłanie danych do atrybutu normal
+	glDisableVertexAttribArray(sp->a("c2"));  //Wyłącz przesyłanie danych do atrybutu normal
+	glDisableVertexAttribArray(sp->a("c3"));  //Wyłącz przesyłanie danych do atrybutu normal
+}
 
 
 //Procedura rysująca zawartość sceny
@@ -230,14 +386,14 @@ void drawScene(GLFWwindow* window, float kat_x, float kat_y) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Wyczyść bufor koloru i bufor głębokości
 
 
-	glm::mat4 V = glm::lookAt(pos, pos + computeDir(kat_x, kat_y), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
-	glm::mat4 P = glm::perspective(glm::radians(50.0f), 1.0f, 0.1f, -100.0f); //Wylicz macierz rzutowania
+	V = glm::lookAt(pos, pos + computeDir(kat_x, kat_y), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
+	P = glm::perspective(glm::radians(50.0f), 1.0f, 0.1f, -100.0f); //Wylicz macierz rzutowania
 
-	spLambert->use(); //Aktyeuj program cieniujący
+	sp->use(); //Aktyeuj program cieniujący
 
 	glUniformMatrix4fv(spLambert->u("P"), 1, false, glm::value_ptr(P)); //Załaduj do programu cieniującego macierz rzutowania
 	glUniformMatrix4fv(spLambert->u("V"), 1, false, glm::value_ptr(V)); //Załaduj do programu cieniującego macierz widoku
-
+	
 	/*
 	loadModel("etagereEnfant.obj");
 	glm::mat4 M1 = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
