@@ -25,13 +25,15 @@ float speed_y = 0;//[radiany/s]
 float speed_walk = 0;
 float aspectRatio = 1;
 
+int flagDrink = 0;
+
 glm::mat4 V, P;
 
 ShaderProgram* sp;
 
 GLuint tex;
 GLuint texWall0, texFloor, texCeiling;
-GLuint texWoodenDoor;
+GLuint texWoodenDoor, texTemp;
 
 float* verticesCube = myCubeVertices;
 float* normalsCube = myCubeNormals;
@@ -39,7 +41,7 @@ float* texCoordsCube = myCubeTexCoords;
 float* colorsCube = myCubeColors;
 int vertexCountCube = myCubeVertexCount;
 
-glm::vec3 pos = glm::vec3(0, 1, -5);
+glm::vec3 pos = glm::vec3(0, 1, -1);
 
 std::vector<glm::vec4> verts;
 std::vector<glm::vec4> norms;
@@ -55,6 +57,7 @@ glm::vec3 computeDir(float kat_x, float kat_y) {
 	return glm::vec3(dir);
 }
 
+
 void key_callback(
 	GLFWwindow* window,
 	int key,
@@ -69,6 +72,7 @@ void key_callback(
 		if (key == GLFW_KEY_PAGE_DOWN) speed_x = 1;
 		if (key == GLFW_KEY_UP) speed_walk = 4;
 		if (key == GLFW_KEY_DOWN) speed_walk = -2;
+		if (key == GLFW_KEY_D) flagDrink = 1;
 	}
 	if (action == GLFW_RELEASE) {
 		if (key == GLFW_KEY_LEFT) speed_y = 0;
@@ -77,6 +81,7 @@ void key_callback(
 		if (key == GLFW_KEY_DOWN) speed_walk = 0;
 		if (key == GLFW_KEY_PAGE_UP) speed_x = 0;
 		if (key == GLFW_KEY_PAGE_DOWN) speed_x = 0;
+		if (key == GLFW_KEY_D) flagDrink = -1;
 	}
 }
 
@@ -178,10 +183,10 @@ void initOpenGLProgram(GLFWwindow* window) {
 	sp = new ShaderProgram("v_lamberttextured.glsl", NULL, "f_lamberttextured.glsl");
 
 	texWall0 = readTexture("pics/white-brick.png");
-	texFloor= readTexture("pics/floor.png");
+	texFloor = readTexture("pics/floor.png");
 	texCeiling = readTexture("pics/ceiling.png");
 	texWoodenDoor = readTexture("pics/wooden_door.png");
-	
+	texTemp = readTexture("pics/floor_1.png");
 }
 
 
@@ -191,7 +196,6 @@ void freeOpenGLProgram(GLFWwindow* window) {
 	//************Tutaj umieszczaj kod, który należy wykonać po zakończeniu pętli głównej************
 	glDeleteTextures(1, &texWall0);
 }
-
 
 
 void texRack(glm::mat4 P, glm::mat4 V, glm::mat4 M)
@@ -224,7 +228,7 @@ void texRack(glm::mat4 P, glm::mat4 V, glm::mat4 M)
 
 
 void drawDoor(glm::mat4 M) {
-	glm::mat4 MD = glm::translate(M, glm::vec3(0.0f, -0.5f, 0.0f)); 
+	glm::mat4 MD = glm::translate(M, glm::vec3(0.0f, -0.5f, 0.0f));
 	MD = glm::scale(MD, glm::vec3(3.1 / 2, 5.25 / 2, 1.5 / 2));
 
 	sp->use();
@@ -254,11 +258,11 @@ void drawDoor(glm::mat4 M) {
 
 // narysuj podłogę;
 void drawFloor(glm::mat4 M) {
-	float width=16, hight=24, thickness=0.5;
+	float width = 16, hight = 12, thickness = 0.5;
 	glm::mat4 MF = glm::rotate(M, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	MF = glm::translate(MF, glm::vec3(0.0f, 0.0f, 3.0f));
 	MF = glm::scale(MF, glm::vec3(width / 2, hight / 2, thickness / 2));
-	
+
 	sp->use();
 	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P));
 	glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(V));
@@ -287,11 +291,11 @@ void drawFloor(glm::mat4 M) {
 
 // narysuj sufit;
 void drawCeiling(glm::mat4 M) {
-	float width = 16, hight = 24, thickness = 0.5;
+	float width = 16, hight = 12, thickness = 0.5;
 	glm::mat4 MF = glm::rotate(M, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	MF = glm::translate(MF, glm::vec3(0.0f, 0.0f, 5.0f));
+	MF = glm::translate(MF, glm::vec3(0.0f, 0.0f, 4.0f));
 	MF = glm::scale(MF, glm::vec3(width / 2, hight / 2, thickness / 2));
-	
+
 	sp->use();
 	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P));
 	glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(V));
@@ -321,7 +325,7 @@ void drawCeiling(glm::mat4 M) {
 // narysuj ścianę o danej wielkości w przesłanej macierzy
 void drawWall(glm::mat4 M, float width, float hight, float thickness) {
 
-	glm::mat4 MW = glm::scale(M, glm::vec3(width/2, hight/2, thickness/2));
+	glm::mat4 MW = glm::scale(M, glm::vec3(width / 2, hight / 2, thickness / 2));
 
 	sp->use();
 	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P));
@@ -358,42 +362,83 @@ void drawRoom() {
 	drawCeiling(MR);
 
 	// narysuj ściany
-	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, 12.0f));
-	drawWall(MR, 16, 6, 0.5);
-	
-	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, -12.0f));
+	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, 6.0f));
+	drawWall(MR, 16, 8, 0.5);
+
+	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, -6.0f));
 	MR = glm::rotate(MR, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, 8.0f));
-	drawWall(MR, 24, 6, 0.5);
+	drawWall(MR, 12, 8, 0.5);
 
 	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, -8.0f));
 	MR = glm::rotate(MR, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, 12.0f));
-	drawWall(MR, 16, 6, 0.5);
+	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, 6.0f));
+	drawWall(MR, 16, 8, 0.5);
 	drawDoor(MR);
 
-	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, -12.0f));
+	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, -6.0f));
 	MR = glm::rotate(MR, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	MR = glm::translate(MR, glm::vec3(0.0f, 0.0f, 8.0f));
-	drawWall(MR, 24, 6, 0.5);
-	
+	drawWall(MR, 12, 8, 0.5);
+
+}
+
+void drawTest(glm::mat4 M, float angle);
+
+void drink() {
+	cout << "drink\n";
+	glm::mat4 MDrink = glm::mat4(1.0f);
+
+	for (int i = 0; i < 10; i++) {
+		drawTest(MDrink, glm::radians(i * 90.0));
+	}
 }
 
 
+void drawTest(glm::mat4 M, float angle) {
+	glm::mat4 MTest = glm::mat4(1.0f);
+	MTest = glm::rotate(MTest, glm::radians(angle), glm::vec3(1.0f, 0.0f, 0.0f));
+	MTest = glm::translate(MTest, glm::vec3(0.0f, -1.5f, 0.0f));
+
+	sp->use();
+	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P));
+	glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(V));
+	glUniformMatrix4fv(sp->u("M"), 1, false, glm::value_ptr(MTest));
+
+	glEnableVertexAttribArray(sp->a("vertex"));
+	glVertexAttribPointer(sp->a("vertex"), 4, GL_FLOAT, false, 0, verticesCube); //Współrzędne wierzchołków bierz z tablicy myCubeVertices
+
+	glEnableVertexAttribArray(sp->a("normal"));
+	glVertexAttribPointer(sp->a("normal"), 4, GL_FLOAT, false, 0, normalsCube);
+
+	glEnableVertexAttribArray(sp->a("texCoord"));
+	glVertexAttribPointer(sp->a("texCoord"), 2, GL_FLOAT, false, 0, texCoordsCube); //Współrzędne teksturowania bierz z tablicy myCubeTexCoords
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texTemp);
+	glUniform1i(sp->u("tex"), 0);
+
+	glDrawArrays(GL_TRIANGLES, 0, myCubeVertexCount);
+
+	glDisableVertexAttribArray(sp->a("vertex"));
+	glDisableVertexAttribArray(sp->a("normal"));
+	glDisableVertexAttribArray(sp->a("color"));
+}
+
 //Procedura rysująca zawartość sceny
-void drawScene(GLFWwindow* window, float kat_x, float kat_y) {
-	//************Tutaj umieszczaj kod rysujący obraz******************l
+void drawScene(GLFWwindow* window, float kat_x, float kat_y, float angleForDrink) {
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Wyczyść bufor koloru i bufor głębokości
 
 
 	V = glm::lookAt(pos, pos + computeDir(kat_x, kat_y), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
 	P = glm::perspective(glm::radians(50.0f), 1.0f, 0.1f, -100.0f); //Wylicz macierz rzutowania
 
-	spLambert->use(); //Aktyeuj program cieniujący
+	spLambert->use();
 
-	glUniformMatrix4fv(spLambert->u("P"), 1, false, glm::value_ptr(P)); //Załaduj do programu cieniującego macierz rzutowania
-	glUniformMatrix4fv(spLambert->u("V"), 1, false, glm::value_ptr(V)); //Załaduj do programu cieniującego macierz widoku
-	
+	glUniformMatrix4fv(spLambert->u("P"), 1, false, glm::value_ptr(P)); //Załaduj macierz rzutowania
+	glUniformMatrix4fv(spLambert->u("V"), 1, false, glm::value_ptr(V)); //Załaduj macierz widoku
+
 	/*
 	loadModel("etagereEnfant.obj");
 	glm::mat4 M1 = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
@@ -405,36 +450,9 @@ void drawScene(GLFWwindow* window, float kat_x, float kat_y) {
 	loadModel("etagereEnfant.obj");
 	texRack(P, V, M1); */
 
-	glm::mat4 MWall = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
+	glm::mat4 MWall = glm::mat4(1.0f);
 	drawRoom();
-
-	/*
-	glm::mat4 M2 = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
-	M2 = glm::translate(M2, glm::vec3(-4, 2, 0));
-	M2 = glm::scale(M2, glm::vec3(1.5, 2, 1));
-	glUniform4f(spLambert->u("color"), 1, 1, 0, 1); //Ustaw kolor rysowania obiektu
-	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M2)); //Załaduj do programu cieniującego macierz modelu
-	Models::cube.drawSolid(); //Narysuj obiekt
-
-	glm::mat4 M3 = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
-	M3 = glm::translate(M3, glm::vec3(-4, 1, 3));
-	M3 = glm::scale(M3, glm::vec3(0.5, 1, 1.5));
-	glUniform4f(spLambert->u("color"), 0, 1, 1, 1); //Ustaw kolor rysowania obiektu
-	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M3)); //Załaduj do programu cieniującego macierz modelu
-	Models::cube.drawSolid(); //Narysuj obiekt
-
-	glm::mat4 M4 = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową	
-	M4 = glm::translate(M4, glm::vec3(0, 0.25f, 0));
-	M4 = glm::scale(M4, glm::vec3(0.5, 0.25, 0.5));
-	glUniform4f(spLambert->u("color"), 0, 1, 0, 1); //Ustaw kolor rysowania obiektu
-	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M4)); //Załaduj do programu cieniującego macierz modelu
-	Models::cube.drawSolid(); //Narysuj obiekt
-
-	glm::mat4 M5 = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową	
-	M5 = glm::translate(M5, glm::vec3(0, 0.9f, 0));
-	glUniform4f(spLambert->u("color"), 1, 0, 0, 1); //Ustaw kolor rysowania obiektu
-	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M5)); //Załaduj do programu cieniującego macierz modelu
-	Models::teapot.drawSolid(); //Narysuj obiekt */
+	if (flagDrink != 0) drawTest(MWall, angleForDrink);
 
 	glfwSwapBuffers(window); //Skopiuj bufor tylny do bufora przedniego
 }
@@ -471,7 +489,7 @@ int main(void)
 	initOpenGLProgram(window); //Operacje inicjujące
 
 	//Główna pętla
-	float angle = 0; //zadeklaruj zmienną przechowującą aktualny kąt obrotu
+	float angleDrink = 0;
 	float kat_y = 0;
 	float kat_x = 0;
 	glfwSetTime(0); //Wyzeruj licznik czasu
@@ -480,8 +498,20 @@ int main(void)
 		kat_y += speed_y * glfwGetTime(); //Oblicz kąt o jaki obiekt obrócił się podczas poprzedniej klatki
 		kat_x += speed_x * glfwGetTime(); //Oblicz kąt o jaki obiekt obrócił się podczas poprzedniej klatki
 		pos += (float)(speed_walk * glfwGetTime()) * computeDir(0, kat_y);
+		if (flagDrink == 0) {
+			angleDrink = 0.0f;
+		}
+		if (flagDrink == 1) {
+			angleDrink = angleDrink + 2.0f;
+			angleDrink = min(angleDrink, 90.0f);
+		}
+		if (flagDrink == -1) {
+			angleDrink = angleDrink - 2.0f;
+			angleDrink = max(angleDrink, 0.0f);
+			if (angleDrink <= 0.0f) flagDrink = 0;
+		}
 		glfwSetTime(0); //Wyzeruj licznik czasu
-		drawScene(window, kat_x, kat_y); //Wykonaj procedurę rysującą
+		drawScene(window, kat_x, kat_y, angleDrink); //Wykonaj procedurę rysującą
 		glfwPollEvents(); //Wykonaj procedury callback w zalezności od zdarzeń jakie zaszły.
 	}
 
@@ -736,66 +766,6 @@ int main(void)
 //		Models::cube.drawSolid(); //Narysowanie obiektu
 //	}
 //	*/
-//
-//
-//	/*
-//		Rysowanie układu słonecznego
-//		// ---Poniższy kawałek kodu powtarzamy dla każdego obiektu-------------------------------------
-//	// Słońce
-//	// Obliczanie macierzy modelu
-//	glm::mat4 MS = glm::mat4(1.0f);
-//	//Załadowanie macierzy modelu do programu cieniującego
-//	glUniform4f(spLambert->u("color"), 1.0f, 1.0f, 0.0f, 1.0f);
-//	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(MS));
-//	Sun.drawSolid();
-//
-//	// Planeta
-//	//Obliczanie macierzy modelu
-//	glm::mat4 MP = MS;
-//	MP = glm::rotate(MP, angle, glm::vec3(0.0f, 1.0f, 0.0f)); // obróć o zadany kąt
-//	MP = glm::translate(MP, glm::vec3(1.5f, 0.0f, 0.0f));     // przesuń na odległość orbity
-//	//Załadowanie macierzy modelu do programu cieniującego
-//	glUniform4f(spLambert->u("color"), 0.0, 1.0, 0.0, 1.0);
-//	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(MP));
-//	Earth.drawSolid();
-//
-//	// Księżyc
-//	//Obliczanie macierzy modelu
-//	glm::mat4 MK = MP;
-//	MK = glm::rotate(MK, angle * 3.7f, glm::vec3(0.0f, 1.0f, 0.0f)); // mnożę kąt aby nadać różne prędkości orbit
-//	MK = glm::translate(MK, glm::vec3(0.5f, 0.0f, 0.0f));
-//	//Załadowanie macierzy modelu do programu cieniującego
-//	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(MK));
-//	glUniform4f(spLambert->u("color"), 0.5, 0.5, 0.5, 1);
-//	Moon.drawSolid();
-//		//-----------------------------------------------------------------------------------------------
-//
-//	// Planeta-Mars
-//	//Obliczanie macierzy modelu
-//	glm::mat4 MM = MS;
-//	MM = glm::rotate(MM, angle, glm::vec3(0.0f, 0.0f, 1.0f)); // obróć o zadany kąt
-//	MM = glm::translate(MM, glm::vec3(1.5f, 0.0f, 0.0f));     // przesuń na odległość orbity
-//	//Załadowanie macierzy modelu do programu cieniującego
-//	glUniform4f(spLambert->u("color"), 0.0, 0.0, 1.0, 1.0);
-//	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(MM));
-//	Mars.drawSolid();
-//	*/
-//
-//
-//
-//		/* Stara część programu */
-//	// R = glm::rotate(M, angle, glm::vec3(1.0f, 0.0f, 1.0f));
-//	// T = glm::translate(M, glm::vec3(1.0f, 1.0f, 0.0f));
-//	// S = glm::scale(M,glm::vec3(1.5f,1.0f,2.0f));
-//	// M = R * T * S;
-//
-//	// spLambert->use();	//Aktywacja programu cieniującego
-//	// glUniform4f(spLambert->u("color"), 0.6, 0.0, 0.1, 1);
-//	// glUniformMatrix4fv(spLambert->u("P"), 1, false, glm::value_ptr(P));
-//	// glUniformMatrix4fv(spLambert->u("V"), 1, false, glm::value_ptr(V));
-//	// glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M));
-//
-//	// Models::torus.drawSolid();
 //
 //	glfwSwapBuffers(window);
 //}
