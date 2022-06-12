@@ -30,6 +30,8 @@ int flagDrink = 0;
 glm::mat4 V, P;
 glm::mat4 ViewerCam = glm::mat4(1.0f);
 
+glm::vec3 RotateCam = glm::vec3(0.0f, 1.0f, 0.0f);
+
 ShaderProgram* sp;
 
 GLuint tex;
@@ -45,7 +47,7 @@ float* colorsCube = myCubeColors;
 int vertexCountCube = myCubeVertexCount;
 
 glm::vec3 pos = glm::vec3(0, 1, -1);
-glm::vec3 pos2 = glm::vec3(0, 0.0, -1);
+glm::vec3 pos2 = glm::vec3(0, 0, -1);
 
 std::vector<glm::vec4> verts;
 std::vector<glm::vec4> norms;
@@ -338,7 +340,6 @@ void drawFloor(glm::mat4 M) {
 	glDisableVertexAttribArray(sp->a("color"));
 }
 
-
 // narysuj sufit;
 void drawCeiling(glm::mat4 M) {
 	float width = 16, hight = 12, thickness = 0.5;
@@ -370,7 +371,6 @@ void drawCeiling(glm::mat4 M) {
 	glDisableVertexAttribArray(sp->a("normal"));
 	glDisableVertexAttribArray(sp->a("color"));
 }
-
 
 // narysuj ścianę o danej wielkości w przesłanej macierzy
 void drawWall(glm::mat4 M, float width, float hight, float thickness) {
@@ -506,11 +506,15 @@ void drawRack(glm::mat4 M, GLuint tex) {
 
 }
 
-void drawTest(glm::mat4 MT, float angle) {
 
-	glm::mat4 MTest = glm::rotate(MT, glm::radians(angle), glm::vec3(-1.0f, 0.0f, 0.0f));
+void drawTest(glm::mat4 MT, float angle, glm::vec3 direction) {
+
+	glm::mat4 MTest = glm::rotate(MT, glm::radians(90.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+	MTest = glm::rotate(MTest, glm::radians(angle), direction);
+	//glm::mat4 MTest = glm::rotate(MT, glm::radians(angle), glm::vec3(-1.0f, 0.0f, 0.0f));
 	MTest = glm::translate(MTest, glm::vec3(0.0f, 0.5f, 0.0f));
 	MTest = glm::scale(MTest, glm::vec3(0.25f, 0.25f, 0.25f));
+	//MTest = glm::rotate(MTest, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
 	sp->use();
 	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P));
@@ -568,6 +572,7 @@ void drawCounter() {
 	glDisableVertexAttribArray(sp->a("color"));
 }
 
+
 void drawKangaroo()
 {
 	glm::mat4 M1 = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
@@ -580,17 +585,6 @@ void drawKangaroo()
 	glUniformMatrix4fv(sp->u("M"), 1, false, glm::value_ptr(M1)); //Załaduj do programu cieniującego macierz modelu
 	loadModel("Models/Kangaroo.fbx", verts3, norms3, texCoords3, indices3, true, texKangaroo);
 }
-
-
-void drink() {
-	cout << "drink\n";
-	glm::mat4 MDrink = glm::mat4(1.0f);
-
-	for (int i = 0; i < 10; i++) {
-		drawTest(MDrink, glm::radians(i * 90.0));
-	}
-}
-
 
 //Procedura rysująca zawartość sceny
 void drawScene(GLFWwindow* window, float kat_x, float kat_y, float angleForDrink) {
@@ -609,7 +603,8 @@ void drawScene(GLFWwindow* window, float kat_x, float kat_y, float angleForDrink
 
 	drawRoom();
 	glm::mat4 ViewerCam2 = glm::translate(ViewerCam, pos2 + computeDir(kat_x, kat_y));
-	drawTest(ViewerCam2, angleForDrink);
+	//cout << pos2[0] << '\n' << pos2[1] << '\n' << pos2[2] << "\n\n";
+	drawTest(ViewerCam2, angleForDrink, computeDir(0, kat_y));
 	//if (flagDrink != 0) drawTest(MWall, angleForDrink);
 
 	/*
@@ -633,9 +628,9 @@ void drawScene(GLFWwindow* window, float kat_x, float kat_y, float angleForDrink
 	for (int i = 1; i <= 4; i++) {
 		MRack = glm::translate(MRack, glm::vec3(1, 0, 0));
 		drawRack(MRack, drinks[i]);
-	}
+	}*/
 
-
+	/*
 	glm::mat4 MCounter = glm::mat4(1.0f);
 	drawCounter();
 
@@ -687,6 +682,7 @@ int main(void)
 		kat_x += speed_x * glfwGetTime(); //Oblicz kąt o jaki obiekt obrócił się podczas poprzedniej klatki
 		pos += (float)(speed_walk * glfwGetTime()) * computeDir(0, kat_y);
 		pos2 += (float)(speed_walk * glfwGetTime()) * computeDir(0, kat_y);
+		RotateCam += (float)(speed_walk * glfwGetTime()) * computeDir(0, kat_y);
 
 		if (flagDrink == 0) {
 			angleDrink = 0.0f;
