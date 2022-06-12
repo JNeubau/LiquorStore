@@ -603,9 +603,8 @@ void drawScene(GLFWwindow* window, float kat_x, float kat_y, float angleForDrink
 
 	drawRoom();
 	glm::mat4 ViewerCam2 = glm::translate(ViewerCam, pos2 + computeDir(kat_x, kat_y));
-	//cout << pos2[0] << '\n' << pos2[1] << '\n' << pos2[2] << "\n\n";
-	drawTest(ViewerCam2, angleForDrink, computeDir(0, kat_y));
-	//if (flagDrink != 0) drawTest(MWall, angleForDrink);
+	//drawTest(ViewerCam2, angleForDrink, computeDir(0, kat_y));
+	if (flagDrink != 0) drawTest(ViewerCam2, angleForDrink, computeDir(0, kat_y));
 
 	/*
 	glm::mat4 MRack = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
