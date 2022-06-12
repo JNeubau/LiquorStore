@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+/.vs/bio_szkielet_01_win/v16/Browse.VC.db
+/.vs/bio_szkielet_01_win/v16/Browse.VC.opendb
+/.vs/bio_szkielet_01_win/v16/ipch/AutoPCH/5ea5969385141883/MAIN_FILE.ipch

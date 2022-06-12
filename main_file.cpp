@@ -34,6 +34,8 @@ ShaderProgram* sp;
 GLuint tex;
 GLuint texWall0, texFloor, texCeiling;
 GLuint texWoodenDoor, texTemp;
+GLuint texVodka, texCounter, texKangaroo, texZubr, texAmarena, texHarnas, texWino;
+
 
 float* verticesCube = myCubeVertices;
 float* normalsCube = myCubeNormals;
@@ -47,6 +49,21 @@ std::vector<glm::vec4> verts;
 std::vector<glm::vec4> norms;
 std::vector<glm::vec2> texCoords;
 std::vector<unsigned int> indices;
+
+std::vector<glm::vec4> verts1;
+std::vector<glm::vec4> norms1;
+std::vector<glm::vec2> texCoords1;
+std::vector<unsigned int> indices1;
+
+std::vector<glm::vec4> verts2;
+std::vector<glm::vec4> norms2;
+std::vector<glm::vec2> texCoords2;
+std::vector<unsigned int> indices2;
+
+std::vector<glm::vec4> verts3;
+std::vector<glm::vec4> norms3;
+std::vector<glm::vec2> texCoords3;
+std::vector<unsigned int> indices3;
 
 glm::vec3 computeDir(float kat_x, float kat_y) {
 	glm::vec4 dir(0, 0, 1, 0);
@@ -92,52 +109,6 @@ void windowResizeCallback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
 }
 
-
-void loadModel(string filename)
-{
-	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(filename, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals);
-	cout << importer.GetErrorString() << endl;
-
-	/*if (scene->HasMeshes())
-	{
-		for (int i = 0; i < scene->mNumMeshes; i++)
-		{
-			importMesh(scene->mMeshes[i]);
-		}
-	}*/
-
-	aiMesh* mesh = scene->mMeshes[0];
-
-	for (int i = 0; i < mesh->mNumVertices; i++)
-	{
-		aiVector3D vertex = mesh->mVertices[i];
-		//cout << vertex.x << " " << vertex.y << " " << vertex.z << endl;
-		verts.push_back(glm::vec4(vertex.x, vertex.y, vertex.z, 1));
-
-		aiVector3D normal = mesh->mNormals[i];
-		//cout << normal.x << " " << normal.y << " " << normal.z << endl;
-		norms.push_back(glm::vec4(normal.x, normal.y, normal.z, 0));
-
-
-		unsigned int number_of_sets = mesh->GetNumUVChannels();
-		unsigned int number_of_tex = mesh->mNumUVComponents[0];
-		aiVector3D texCoord = mesh->mTextureCoords[0][i];
-		texCoords.push_back(glm::vec2(texCoord.x, texCoord.y));
-
-		//cout << texCoord.x << " " << texCoord.y << endl;
-	}
-
-	for (int i = 0; i < mesh->mNumFaces; i++) {
-		aiFace& face = mesh->mFaces[i];
-
-		for (int j = 0; j < face.mNumIndices; j++)
-		{
-			indices.push_back(face.mIndices[j]);
-		}
-		//cout << endl;
-	}
-}
 
 //Procedura obsługi błędów
 void error_callback(int error, const char* description) {
@@ -187,6 +158,14 @@ void initOpenGLProgram(GLFWwindow* window) {
 	texCeiling = readTexture("pics/ceiling.png");
 	texWoodenDoor = readTexture("pics/wooden_door.png");
 	texTemp = readTexture("pics/floor_1.png");
+	texCounter = readTexture("pics/aditya-joshi-wG923J9naFQ-unsplash.png");
+	texKangaroo = readTexture("pics/Kangaroo_texture.png");
+	texVodka = readTexture("pics/zubrowka.png");
+	texZubr = readTexture("pics/zubr.png");
+	texHarnas = readTexture("pics/harnas.png");
+	texAmarena = readTexture("pics/amarena.png");
+	texWino = readTexture("pics/wino.png");
+
 }
 
 
@@ -198,32 +177,99 @@ void freeOpenGLProgram(GLFWwindow* window) {
 }
 
 
-void texRack(glm::mat4 P, glm::mat4 V, glm::mat4 M)
+
+void texModel(std::vector<glm::vec4> verts,
+	std::vector<glm::vec4> norms,
+	std::vector<glm::vec2> texCoords,
+	std::vector<unsigned int> indices, bool ifTex, GLuint tex)
 {
-	spLambert->use();
-	glUniformMatrix4fv(spLambert->u("P"), 1, false, glm::value_ptr(P));
-	glUniformMatrix4fv(spLambert->u("V"), 1, false, glm::value_ptr(V));
-	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M));
 
-	glEnableVertexAttribArray(spLambert->a("vertex"));
-	glVertexAttribPointer(spLambert->a("vertex"), 4, GL_FLOAT, false, 0, verts.data());
+	sp->use();
+	//glUniformMatrix4fv(spLambert->u("P"), 1, false, glm::value_ptr(P));
+	//glUniformMatrix4fv(spLambert->u("V"), 1, false, glm::value_ptr(V));
+	//glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M));
 
-	glEnableVertexAttribArray(spLambert->a("texCoord"));
-	glVertexAttribPointer(spLambert->a("texCoord"), 2, GL_FLOAT, false, 0, texCoords.data());
+	glEnableVertexAttribArray(sp->a("vertex"));
+	glVertexAttribPointer(sp->a("vertex"), 4, GL_FLOAT, false, 0, verts.data());
 
-	glEnableVertexAttribArray(spLambert->a("normal"));
-	glVertexAttribPointer(spLambert->a("normal"), 4, GL_FLOAT, false, 0, norms.data());
+	glEnableVertexAttribArray(sp->a("texCoord"));
+	glVertexAttribPointer(sp->a("texCoord"), 2, GL_FLOAT, false, 0, texCoords.data());
 
-	glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, tex);
-	glUniform1i(spLambert->u("tex"), 0);
+	glEnableVertexAttribArray(sp->a("normal"));
+	glVertexAttribPointer(sp->a("normal"), 4, GL_FLOAT, false, 0, norms.data());
+
+	//glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, tex);
+	//glUniform1i(spLambert->u("tex"), 0);
+	if (ifTex == true) {
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, tex);
+		glUniform1i(sp->u("tex"), 0);
+	}
+
 
 	//glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, indices.data());
 
-	glDisableVertexAttribArray(spLambert->a("vertex"));
-	glDisableVertexAttribArray(spLambert->a("texCoord"));
-	glDisableVertexAttribArray(spLambert->a("normal"));
+	glDisableVertexAttribArray(sp->a("vertex"));
+	glDisableVertexAttribArray(sp->a("texCoord"));
+	glDisableVertexAttribArray(sp->a("normal"));
+}
 
+bool loadModel(string filename, std::vector<glm::vec4> verts,
+	std::vector<glm::vec4> norms,
+	std::vector<glm::vec2> texCoords,
+	std::vector<unsigned int> indices, bool ifTex, GLuint tex)
+{
+	Assimp::Importer importer;
+	const aiScene* scene = importer.ReadFile(filename, aiProcess_Triangulate |
+		aiProcess_FlipUVs |
+		aiProcess_GenSmoothNormals |
+		aiProcess_CalcTangentSpace |
+		aiProcess_JoinIdenticalVertices |
+		aiProcess_SortByPType);
+	//cout << importer.GetErrorString() << endl;
+
+	/*if (scene->HasMeshes())
+	{
+		for (int i = 0; i < scene->mNumMeshes; i++)
+		{
+			importMesh(scene->mMeshes[i]);
+		}
+	}*/
+
+	aiMesh* mesh = scene->mMeshes[0];
+
+	for (int i = 0; i < mesh->mNumVertices; i++)
+	{
+		aiVector3D vertex = mesh->mVertices[i];
+		//cout << vertex.x << " " << vertex.y << " " << vertex.z << endl;
+		verts.push_back(glm::vec4(vertex.x, vertex.y, vertex.z, 1));
+
+		aiVector3D normal = mesh->mNormals[i];
+		//cout << normal.x << " " << normal.y << " " << normal.z << endl;
+		norms.push_back(glm::vec4(normal.x, normal.y, normal.z, 0));
+
+
+		unsigned int number_of_sets = mesh->GetNumUVChannels();
+		unsigned int number_of_tex = mesh->mNumUVComponents[0];
+		aiVector3D texCoord = mesh->mTextureCoords[0][i];
+		texCoords.push_back(glm::vec2(texCoord.x, texCoord.y));
+
+		//cout << texCoord.x << " " << texCoord.y << endl;
+	}
+
+	for (int i = 0; i < mesh->mNumFaces; i++) {
+		aiFace& face = mesh->mFaces[i];
+
+		for (int j = 0; j < face.mNumIndices; j++)
+		{
+			indices.push_back(face.mIndices[j]);
+		}
+		//cout << endl;
+	}
+	texModel(verts, norms, texCoords, indices, ifTex, tex);
+
+	return true;
 }
 
 
@@ -394,8 +440,80 @@ void drink() {
 	}
 }
 
+void drawRack(glm::mat4 M, GLuint tex) {
+	glm::mat4 M1 = M; //Zainicjuj macierz modelu macierzą jednostkową
+	M1 = glm::translate(M1, glm::vec3(-3.5, 0, -10));
+	M1 = glm::scale(M1, glm::vec3(0.01, 0.01, 0.01));
+	glUniform4f(sp->u("color"), 0.37, 0.22, 0.08, 0.8); //Ustaw kolor rysowania obiektu
+	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P));
+	glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(V));
+	glUniformMatrix4fv(sp->u("M"), 1, false, glm::value_ptr(M1)); //Załaduj do programu cieniującego macierz modelu
+	loadModel("Models/pinewoodRackFullHeight.fbx", verts1, norms1, texCoords1, indices1, true, texWoodenDoor);
 
-void drawTest(glm::mat4 M, float angle) {
+	glm::mat4 MB = M; //Zainicjuj macierz modelu macierzą jednostkową
+	MB = glm::translate(MB, glm::vec3(-0.63, 0.15, -6.15));
+	MB = glm::rotate(MB, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	MB = glm::scale(MB, glm::vec3(0.001, 0.001, 0.0006));
+	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P));
+	glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(V));
+	glUniform4f(sp->u("color"), 0.68, 0.68, 0.68, 0.7); //Ustaw kolor rysowania obiektu
+	glUniformMatrix4fv(sp->u("M"), 1, false, glm::value_ptr(MB)); //Załaduj do programu cieniującego macierz modelu
+	loadModel("Models/Bottle.fbx", verts2, norms2, texCoords2, indices2, true, tex);
+	int x = 130;
+	int m = 0;
+	for (int i = 1; i <= 5; i++)
+	{
+		if (i % 2 == 0)
+			x = -130;
+		else
+			x = 130;
+
+		if (i > 1)
+		{
+			MB = glm::translate(MB, glm::vec3(0, 0, 460 + m));
+			glUniform4f(spLambert->u("color"), 0.68, 0.68, 0.68, 0.7); //Ustaw kolor rysowania obiektu
+			glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P));
+			glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(V));
+			glUniformMatrix4fv(sp->u("M"), 1, false, glm::value_ptr(MB)); //Załaduj do programu cieniującego macierz modelu
+			loadModel("Models/Bottle.fbx", verts2, norms2, texCoords2, indices2, true, tex);
+		}
+
+		for (int j = 1; j <= 5; j++)
+		{
+			MB = glm::translate(MB, glm::vec3(x, 0, 0));
+			glUniform4f(sp->u("color"), 0.68, 0.68, 0.68, 0.7); //Ustaw kolor rysowania obiektu
+			glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P));
+			glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(V));
+			glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(MB));
+			//texModel(verts2, norms2, texCoords2, indices2);
+			loadModel("Models/Bottle.fbx", verts2, norms2, texCoords2, indices2, true, tex);
+		}
+		m += 32;
+	}
+
+
+	MB = glm::translate(MB, glm::vec3(0, 0, 530));
+	glUniform4f(spLambert->u("color"), 0.68, 0.68, 0.68, 0.7); //Ustaw kolor rysowania obiektu
+	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P));
+	glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(V));
+	glUniformMatrix4fv(sp->u("M"), 1, false, glm::value_ptr(MB)); //Załaduj do programu cieniującego macierz modelu
+	loadModel("Models/Bottle.fbx", verts2, norms2, texCoords2, indices2, true, tex);
+
+	for (int j = 1; j <= 5; j++)
+	{
+		MB = glm::translate(MB, glm::vec3(-130, 0, 0));
+		glUniform4f(sp->u("color"), 0.68, 0.68, 0.68, 0.7); //Ustaw kolor rysowania obiektu
+		glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P));
+		glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(V));
+		glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(MB));
+		//texModel(verts2, norms2, texCoords2, indices2);
+		loadModel("Models/Bottle.fbx", verts2, norms2, texCoords2, indices2, true, tex);
+	}
+
+}
+
+void drawTest(glm::mat4 M, float angle)
+{
 	glm::mat4 MTest = glm::mat4(1.0f);
 	MTest = glm::rotate(MTest, glm::radians(angle), glm::vec3(1.0f, 0.0f, 0.0f));
 	MTest = glm::translate(MTest, glm::vec3(0.0f, -1.5f, 0.0f));
@@ -425,34 +543,101 @@ void drawTest(glm::mat4 M, float angle) {
 	glDisableVertexAttribArray(sp->a("color"));
 }
 
+void drawCounter() {
+	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P));
+	glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(V));
+	glm::mat4 MCounter = glm::mat4(1.0f);
+	MCounter = glm::translate(MCounter, glm::vec3(0.0f, -1.5f, 3.0f));
+	MCounter = glm::scale(MCounter, glm::vec3(1.5, 1.3, 0.5));
+
+
+	sp->use();
+	glUniformMatrix4fv(sp->u("M"), 1, false, glm::value_ptr(MCounter));
+
+	glEnableVertexAttribArray(sp->a("vertex"));
+	glVertexAttribPointer(sp->a("vertex"), 4, GL_FLOAT, false, 0, verticesCube); //Współrzędne wierzchołków bierz z tablicy myCubeVertices
+
+	glEnableVertexAttribArray(sp->a("normal"));
+	glVertexAttribPointer(sp->a("normal"), 4, GL_FLOAT, false, 0, normalsCube);
+
+	glEnableVertexAttribArray(sp->a("texCoord"));
+	glVertexAttribPointer(sp->a("texCoord"), 2, GL_FLOAT, false, 0, texCoordsCube); //Współrzędne teksturowania bierz z tablicy myCubeTexCoords
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texCounter);
+	glUniform1i(sp->u("tex"), 0);
+
+	glDrawArrays(GL_TRIANGLES, 0, myCubeVertexCount);
+
+	glDisableVertexAttribArray(sp->a("vertex"));
+	glDisableVertexAttribArray(sp->a("normal"));
+	glDisableVertexAttribArray(sp->a("color"));
+}
+
+void drawKangaroo()
+{
+	glm::mat4 M1 = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
+	M1 = glm::translate(M1, glm::vec3(0, -2, 6));
+	M1 = glm::rotate(M1, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	M1 = glm::rotate(M1, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+	M1 = glm::scale(M1, glm::vec3(0.025, 0.025, 0.025));
+	//glUniform4f(spLambert->u("color"), 0.37, 0.22, 0.08, 0.8); //Ustaw kolor rysowania obiektu
+	glUniformMatrix4fv(sp->u("M"), 1, false, glm::value_ptr(M1)); //Załaduj do programu cieniującego macierz modelu
+	loadModel("Models/Kangaroo.fbx", verts3, norms3, texCoords3, indices3, true, texKangaroo);
+}
+
 //Procedura rysująca zawartość sceny
 void drawScene(GLFWwindow* window, float kat_x, float kat_y, float angleForDrink) {
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Wyczyść bufor koloru i bufor głębokości
 
+	GLuint drinks[5] = { texVodka, texWino, texZubr, texAmarena, texHarnas };
 
 	V = glm::lookAt(pos, pos + computeDir(kat_x, kat_y), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
 	P = glm::perspective(glm::radians(50.0f), 1.0f, 0.1f, -100.0f); //Wylicz macierz rzutowania
 
-	spLambert->use();
+	sp->use();
 
-	glUniformMatrix4fv(spLambert->u("P"), 1, false, glm::value_ptr(P)); //Załaduj macierz rzutowania
-	glUniformMatrix4fv(spLambert->u("V"), 1, false, glm::value_ptr(V)); //Załaduj macierz widoku
+	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P)); //Załaduj macierz rzutowania
+	glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(V)); //Załaduj macierz widoku
 
-	/*
-	loadModel("etagereEnfant.obj");
-	glm::mat4 M1 = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
-	//M1 = glm::translate(M1, glm::vec3(4, 3, 0));
-	M1 = glm::scale(M1, glm::vec3(0.08, 0.03, 0.01));
-	glUniform4f(spLambert->u("color"), 0, 1, 0, 1); //Ustaw kolor rysowania obiektu
-	glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M1)); //Załaduj do programu cieniującego macierz modelu
-	//Models::cube.drawSolid(); //Narysuj obiekt
-	loadModel("etagereEnfant.obj");
-	texRack(P, V, M1); */
 
 	glm::mat4 MWall = glm::mat4(1.0f);
 	drawRoom();
-	if (flagDrink != 0) drawTest(MWall, angleForDrink);
+
+	glm::mat4 MRack = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
+
+	MRack = glm::translate(MRack, glm::vec3(6.3, -2.7, -3.2));
+	MRack = glm::scale(MRack, glm::vec3(2, 2.2, 2));
+	MRack = glm::rotate(MRack, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	drawRack(MRack, drinks[0]);
+
+
+	for (int i = 1; i <= 4; i++) {
+		MRack = glm::translate(MRack, glm::vec3(-1, 0, 0));
+		drawRack(MRack, drinks[i]);
+	}
+
+	MRack = glm::translate(MRack, glm::vec3(3.5, 0, -5.6));
+	MRack = glm::rotate(MRack, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	drawRack(MRack, drinks[0]);
+
+	for (int i = 1; i <= 4; i++) {
+		MRack = glm::translate(MRack, glm::vec3(1, 0, 0));
+		drawRack(MRack, drinks[i]);
+	}
+
+
+	glm::mat4 MCounter = glm::mat4(1.0f);
+
+	drawCounter();
+	glm::mat4 MKangaroo = glm::mat4(1.0f);
+
+	drawKangaroo();
+
+
+	//if (flagDrink != 0) drawTest(MWall, angleForDrink);
 
 	glfwSwapBuffers(window); //Skopiuj bufor tylny do bufora przedniego
 }
@@ -469,7 +654,7 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-	window = glfwCreateWindow(500, 500, "OpenGL", NULL, NULL);  //Utwórz okno 500x500 o tytule "OpenGL" i kontekst OpenGL.
+	window = glfwCreateWindow(1000, 1000, "OpenGL", NULL, NULL);  //Utwórz okno 500x500 o tytule "OpenGL" i kontekst OpenGL.
 
 	if (!window) //Jeżeli okna nie udało się utworzyć, to zamknij program
 	{

@@ -30,7 +30,6 @@
     <ClInclude Include="torus.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="cube.cpp" />
     <ClCompile Include="lodepng.cpp" />
     <ClCompile Include="main_file.cpp" />
     <ClCompile Include="model.cpp" />

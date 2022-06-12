@@ -44,9 +44,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="cube.cpp">
-      <Filter>Pliki źródłowe</Filter>
-    </ClCompile>
     <ClCompile Include="lodepng.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
