@@ -2,6 +2,7 @@
 #define GLM_FORCE_SWIZZLE
 
 #include <iostream>
+#include <cstdlib>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -26,11 +27,10 @@ float speed_walk = 0;
 float aspectRatio = 1;
 
 int flagDrink = 0;
+float levelDrunk = 0.0;
 
 glm::mat4 V, P;
 glm::mat4 ViewerCam = glm::mat4(1.0f);
-
-glm::vec3 RotateCam = glm::vec3(0.0f, 1.0f, 0.0f);
 
 ShaderProgram* sp;
 
@@ -180,7 +180,6 @@ void freeOpenGLProgram(GLFWwindow* window) {
 	//************Tutaj umieszczaj kod, który należy wykonać po zakończeniu pętli głównej************
 	glDeleteTextures(1, &texWall0);
 }
-
 
 
 void texModel(std::vector<glm::vec4> verts,
@@ -541,6 +540,7 @@ void drawTest(glm::mat4 MT, float angle, glm::vec3 direction) {
 	glDisableVertexAttribArray(sp->a("color"));
 }
 
+
 void drawCounter() {
 	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P));
 	glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(V));
@@ -586,15 +586,26 @@ void drawKangaroo()
 	loadModel("Models/Kangaroo.fbx", verts3, norms3, texCoords3, indices3, true, texKangaroo);
 }
 
+
+//glm::vec3 randomVec() {
+//	glm::vec3 vector = glm::vec3((float) (rand() % 1000) / 1000, (float) (rand() % 1000) / 1000, (float) (rand() % 1000) / 1000);
+//	cout << vector[0] << '\t' << vector[1] << '\t' << vector[2] << '\n';
+//	return vector;
+//}
+
 //Procedura rysująca zawartość sceny
-void drawScene(GLFWwindow* window, float kat_x, float kat_y, float angleForDrink) {
+void drawScene(GLFWwindow* window, float kat_x, float kat_y, float angleForDrink, glm::vec3 random) {
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Wyczyść bufor koloru i bufor głębokości
 
 	GLuint drinks[5] = { texVodka, texWino, texZubr, texAmarena, texHarnas };
 
-	V = glm::lookAt(pos, pos + computeDir(kat_x, kat_y), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
-	P = glm::perspective(glm::radians(50.0f), 1.0f, 0.1f, -100.0f); //Wylicz macierz rzutowania
+	//(w pukcie, patzrąc na, w górę)
+	//V = glm::lookAt(pos, pos + computeDir(kat_x, kat_y) + (levelDrunk * random), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
+	V = glm::lookAt(pos, pos + computeDir(kat_x, kat_y) + random, glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
+	// (kąt rozwarcia, wysokość do szerokości, bliska pł odcinania, daleka pł odcinania)
+	// (kąt rozwarcia, wysokość do szerokości, bliska pł odcinania, daleka pł odcinania)
+	P = glm::perspective(glm::radians(50.0f), 1.0f, 0.1f, -1000.0f); //Wylicz macierz rzutowania
 
 	sp->use();
 
@@ -602,7 +613,7 @@ void drawScene(GLFWwindow* window, float kat_x, float kat_y, float angleForDrink
 	glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(V)); //Załaduj macierz widoku
 
 	drawRoom();
-	glm::mat4 ViewerCam2 = glm::translate(ViewerCam, pos2 + computeDir(kat_x, kat_y));
+	glm::mat4 ViewerCam2 = glm::translate(ViewerCam, pos2 + computeDir(kat_x, kat_y) + random);
 	//drawTest(ViewerCam2, angleForDrink, computeDir(0, kat_y));
 	if (flagDrink != 0) drawTest(ViewerCam2, angleForDrink, computeDir(0, kat_y));
 
@@ -675,19 +686,34 @@ int main(void)
 	float kat_y = 0;
 	float kat_x = 0;
 	glfwSetTime(0); //Wyzeruj licznik czasu
+	int timer = 0;
+	bool flagAddedDrink = false;
+	glm::vec3 randomVector = glm::vec3(0.0, 0.0, 0.0);
 	while (!glfwWindowShouldClose(window)) //Tak długo jak okno nie powinno zostać zamknięte
 	{
 		kat_y += speed_y * glfwGetTime(); //Oblicz kąt o jaki obiekt obrócił się podczas poprzedniej klatki
 		kat_x += speed_x * glfwGetTime(); //Oblicz kąt o jaki obiekt obrócił się podczas poprzedniej klatki
-		pos += (float)(speed_walk * glfwGetTime()) * computeDir(0, kat_y);
-		pos2 += (float)(speed_walk * glfwGetTime()) * computeDir(0, kat_y);
-		RotateCam += (float)(speed_walk * glfwGetTime()) * computeDir(0, kat_y);
+		if (!flagAddedDrink) {
+
+			pos += (float)(speed_walk * glfwGetTime()) * computeDir(0, kat_y) + randomVector;
+			pos2 += (float)(speed_walk * glfwGetTime()) * computeDir(0, kat_y) + randomVector;
+			flagAddedDrink = true;
+		}
+		else {
+			pos += (float)(speed_walk * glfwGetTime()) * computeDir(0, kat_y);
+			pos2 += (float)(speed_walk * glfwGetTime()) * computeDir(0, kat_y);
+		}
+		//pos2 += (float)(speed_walk * glfwGetTime()) * computeDir(0, kat_y);
 
 		if (flagDrink == 0) {
 			angleDrink = 0.0f;
 		}
 		if (flagDrink == 1) {
 			angleDrink = angleDrink + 2.0f;
+			if (angleDrink > 60.0) {
+				levelDrunk += 0.01;
+				cout << levelDrunk << '\n';
+			}
 			angleDrink = min(angleDrink, 90.0f);
 		}
 		if (flagDrink == -1) {
@@ -695,8 +721,18 @@ int main(void)
 			angleDrink = max(angleDrink, 0.0f);
 			if (angleDrink <= 0.0f) flagDrink = 0;
 		}
+		
+		timer += 1;
+		if (timer >= 500) {
+			//randomVector = randomVec();
+			randomVector = levelDrunk * computeDir((float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000);
+			timer = 0;
+			cout << "line\n";
+			flagAddedDrink = false;
+		}
+
 		glfwSetTime(0); //Wyzeruj licznik czasu
-		drawScene(window, kat_x, kat_y, angleDrink); //Wykonaj procedurę rysującą
+		drawScene(window, kat_x, kat_y, angleDrink, randomVector); //Wykonaj procedurę rysującą
 		glfwPollEvents(); //Wykonaj procedury callback w zalezności od zdarzeń jakie zaszły.
 	}
 
