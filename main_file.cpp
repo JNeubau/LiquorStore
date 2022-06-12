@@ -28,6 +28,7 @@ float aspectRatio = 1;
 int flagDrink = 0;
 
 glm::mat4 V, P;
+glm::mat4 ViewerCam = glm::mat4(1.0f);
 
 ShaderProgram* sp;
 
@@ -44,6 +45,7 @@ float* colorsCube = myCubeColors;
 int vertexCountCube = myCubeVertexCount;
 
 glm::vec3 pos = glm::vec3(0, 1, -1);
+glm::vec3 pos2 = glm::vec3(0, 0, 0);
 
 std::vector<glm::vec4> verts;
 std::vector<glm::vec4> norms;
@@ -606,10 +608,10 @@ void drawScene(GLFWwindow* window, float kat_x, float kat_y, float angleForDrink
 
 
 	glm::mat4 MWall = glm::mat4(1.0f);
-	//glm::mat4 MWall;
 	drawRoom();
-	//drawTest(MWall, angleForDrink);
-	if (flagDrink != 0) drawTest(MWall, angleForDrink);
+	glm::mat4 ViewerCam2 = glm::translate(ViewerCam, pos2 + computeDir(kat_x, kat_y));
+	drawTest(ViewerCam2, angleForDrink);
+	//if (flagDrink != 0) drawTest(MWall, angleForDrink);
 
 	/*
 	glm::mat4 MRack = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
@@ -685,6 +687,8 @@ int main(void)
 		kat_y += speed_y * glfwGetTime(); //Oblicz kąt o jaki obiekt obrócił się podczas poprzedniej klatki
 		kat_x += speed_x * glfwGetTime(); //Oblicz kąt o jaki obiekt obrócił się podczas poprzedniej klatki
 		pos += (float)(speed_walk * glfwGetTime()) * computeDir(0, kat_y);
+		pos2 += (float)(speed_walk * glfwGetTime()) * computeDir(0, kat_y);
+
 		if (flagDrink == 0) {
 			angleDrink = 0.0f;
 		}
