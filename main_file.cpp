@@ -45,7 +45,7 @@ float* colorsCube = myCubeColors;
 int vertexCountCube = myCubeVertexCount;
 
 glm::vec3 pos = glm::vec3(0, 1, -1);
-glm::vec3 pos2 = glm::vec3(0, 0, 0);
+glm::vec3 pos2 = glm::vec3(0, 0.0, -1);
 
 std::vector<glm::vec4> verts;
 std::vector<glm::vec4> norms;
@@ -66,6 +66,7 @@ std::vector<glm::vec4> verts3;
 std::vector<glm::vec4> norms3;
 std::vector<glm::vec2> texCoords3;
 std::vector<unsigned int> indices3;
+
 
 glm::vec3 computeDir(float kat_x, float kat_y) {
 	glm::vec4 dir(0, 0, 1, 0);
@@ -506,10 +507,10 @@ void drawRack(glm::mat4 M, GLuint tex) {
 }
 
 void drawTest(glm::mat4 MT, float angle) {
-	//glm::mat4 MTest = glm::mat4(1.0f);
+
 	glm::mat4 MTest = glm::rotate(MT, glm::radians(angle), glm::vec3(-1.0f, 0.0f, 0.0f));
 	MTest = glm::translate(MTest, glm::vec3(0.0f, 0.5f, 0.0f));
-	MTest = glm::scale(MTest, glm::vec3(0.5f, 0.5f, 0.5f));
+	MTest = glm::scale(MTest, glm::vec3(0.25f, 0.25f, 0.25f));
 
 	sp->use();
 	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P));
@@ -606,8 +607,6 @@ void drawScene(GLFWwindow* window, float kat_x, float kat_y, float angleForDrink
 	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P)); //Załaduj macierz rzutowania
 	glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(V)); //Załaduj macierz widoku
 
-
-	glm::mat4 MWall = glm::mat4(1.0f);
 	drawRoom();
 	glm::mat4 ViewerCam2 = glm::translate(ViewerCam, pos2 + computeDir(kat_x, kat_y));
 	drawTest(ViewerCam2, angleForDrink);
