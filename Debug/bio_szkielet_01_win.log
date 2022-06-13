@@ -1,16 +1,12 @@
 ﻿  main_file.cpp
-C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(213,42): warning C4305: "argument": obcięcie z "double" do "GLfloat"
-C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(253,20): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
-C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(272,20): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
-C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(275,21): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
-C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(348,20): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
-C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(367,20): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
-C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(370,21): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
-C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(549,32): warning C4244: "argument": konwersja z "genType" do "float", możliwa utrata danych
-          with
-          [
-              genType=double
-          ]
-C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(797,35): warning C4244: "+=": konwersja z "double" do "float", możliwa utrata danych
-C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(798,35): warning C4244: "+=": konwersja z "double" do "float", możliwa utrata danych
+C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(224,42): warning C4305: "argument": obcięcie z "double" do "GLfloat"
+C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(264,20): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(283,20): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(286,21): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(360,20): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(379,20): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(382,21): warning C4018: "<": niezgodność typu ze znakiem/bez znaku
+C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(787,35): warning C4244: "+=": konwersja z "double" do "float", możliwa utrata danych
+C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(788,35): warning C4244: "+=": konwersja z "double" do "float", możliwa utrata danych
+C:\Users\patka\Grafika vol 3\LiquorStore\main_file.cpp(807,23): warning C4305: "+=": obcięcie z "double" do "float"
   bio_szkielet_01_win.vcxproj -> C:\Users\patka\Grafika vol 3\LiquorStore\Debug\bio_szkielet_01_win.exe
