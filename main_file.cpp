@@ -28,6 +28,9 @@ float aspectRatio = 1;
 int flagDrink = 0;
 
 glm::mat4 V, P;
+glm::mat4 ViewerCam = glm::mat4(1.0f);
+
+glm::vec3 RotateCam = glm::vec3(0.0f, 1.0f, 0.0f);
 
 ShaderProgram* sp;
 ShaderProgram* fur;
@@ -45,6 +48,7 @@ float* colorsCube = myCubeColors;
 int vertexCountCube = myCubeVertexCount;
 
 glm::vec3 pos = glm::vec3(0, 1, -1);
+glm::vec3 pos2 = glm::vec3(0, 0, -1);
 
 std::vector<glm::vec4> verts;
 std::vector<glm::vec4> norms;
@@ -65,6 +69,7 @@ std::vector<glm::vec4> verts3;
 std::vector<glm::vec4> norms3;
 std::vector<glm::vec2> texCoords3;
 std::vector<unsigned int> indices3;
+
 
 glm::vec3 computeDir(float kat_x, float kat_y) {
 	glm::vec4 dir(0, 0, 1, 0);
@@ -321,6 +326,7 @@ void texModel(std::vector<glm::vec4> verts,
 
 }
 
+
 bool loadModel(string filename, std::vector<glm::vec4> verts,
 	std::vector<glm::vec4> norms,
 	std::vector<glm::vec2> texCoords,
@@ -443,7 +449,6 @@ void drawFloor(glm::mat4 M) {
 	glDisableVertexAttribArray(sp->a("color"));
 }
 
-
 // narysuj sufit;
 void drawCeiling(glm::mat4 M) {
 	float width = 16, hight = 12, thickness = 0.5;
@@ -476,7 +481,6 @@ void drawCeiling(glm::mat4 M) {
 	glDisableVertexAttribArray(sp->a("normal"));
 	glDisableVertexAttribArray(sp->a("color"));
 }
-
 
 // narysuj ścianę o danej wielkości w przesłanej macierzy
 void drawWall(glm::mat4 M, float width, float hight, float thickness) {
@@ -539,16 +543,6 @@ void drawRoom() {
 
 }
 
-void drawTest(glm::mat4 M, float angle);
-
-void drink() {
-	cout << "drink\n";
-	glm::mat4 MDrink = glm::mat4(1.0f);
-
-	for (int i = 0; i < 10; i++) {
-		drawTest(MDrink, glm::radians(i * 90.0));
-	}
-}
 
 void drawRack(glm::mat4 M, GLuint tex) {
 	glm::mat4 M1 = M; //Zainicjuj macierz modelu macierzą jednostkową
@@ -622,11 +616,15 @@ void drawRack(glm::mat4 M, GLuint tex) {
 
 }
 
-void drawTest(glm::mat4 M, float angle)
-{
-	glm::mat4 MTest = glm::mat4(1.0f);
-	MTest = glm::rotate(MTest, glm::radians(angle), glm::vec3(1.0f, 0.0f, 0.0f));
-	MTest = glm::translate(MTest, glm::vec3(0.0f, -1.5f, 0.0f));
+
+void drawTest(glm::mat4 MT, float angle, glm::vec3 direction) {
+
+	glm::mat4 MTest = glm::rotate(MT, glm::radians(90.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+	MTest = glm::rotate(MTest, glm::radians(angle), direction);
+	//glm::mat4 MTest = glm::rotate(MT, glm::radians(angle), glm::vec3(-1.0f, 0.0f, 0.0f));
+	MTest = glm::translate(MTest, glm::vec3(0.0f, 0.5f, 0.0f));
+	MTest = glm::scale(MTest, glm::vec3(0.25f, 0.25f, 0.25f));
+	//MTest = glm::rotate(MTest, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
 	sp->use();
 	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P));
@@ -686,6 +684,7 @@ void drawCounter() {
 	glDisableVertexAttribArray(sp->a("color"));
 }
 
+
 void drawKangaroo()
 {
 	glUniformMatrix4fv(fur->u("P"), 1, false, glm::value_ptr(P)); //Załaduj macierz rzutowania
@@ -716,10 +715,12 @@ void drawScene(GLFWwindow* window, float kat_x, float kat_y, float angleForDrink
 	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(P)); //Załaduj macierz rzutowania
 	glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(V)); //Załaduj macierz widoku
 
-
-	glm::mat4 MWall = glm::mat4(1.0f);
 	drawRoom();
+	glm::mat4 ViewerCam2 = glm::translate(ViewerCam, pos2 + computeDir(kat_x, kat_y));
+	//drawTest(ViewerCam2, angleForDrink, computeDir(0, kat_y));
+	if (flagDrink != 0) drawTest(ViewerCam2, angleForDrink, computeDir(0, kat_y));
 
+	/*
 	glm::mat4 MRack = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
 
 	MRack = glm::translate(MRack, glm::vec3(6.3, -2.7, -3.2));
@@ -740,18 +741,14 @@ void drawScene(GLFWwindow* window, float kat_x, float kat_y, float angleForDrink
 	for (int i = 1; i <= 4; i++) {
 		MRack = glm::translate(MRack, glm::vec3(1, 0, 0));
 		drawRack(MRack, drinks[i]);
-	}
+	}*/
 
 	*/
 	glm::mat4 MCounter = glm::mat4(1.0f);
-
 	drawCounter();
+
 	glm::mat4 MKangaroo = glm::mat4(1.0f);
-
-	drawKangaroo();
-
-
-	//if (flagDrink != 0) drawTest(MWall, angleForDrink);
+	drawKangaroo(); */
 
 	glfwSwapBuffers(window); //Skopiuj bufor tylny do bufora przedniego
 }
@@ -797,6 +794,9 @@ int main(void)
 		kat_y += speed_y * glfwGetTime(); //Oblicz kąt o jaki obiekt obrócił się podczas poprzedniej klatki
 		kat_x += speed_x * glfwGetTime(); //Oblicz kąt o jaki obiekt obrócił się podczas poprzedniej klatki
 		pos += (float)(speed_walk * glfwGetTime()) * computeDir(0, kat_y);
+		pos2 += (float)(speed_walk * glfwGetTime()) * computeDir(0, kat_y);
+		RotateCam += (float)(speed_walk * glfwGetTime()) * computeDir(0, kat_y);
+
 		if (flagDrink == 0) {
 			angleDrink = 0.0f;
 		}
