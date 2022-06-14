@@ -38,7 +38,7 @@ ShaderProgram* fur;
 
 GLuint tex;
 GLuint texWall0, texFloor, texCeiling;
-GLuint texWoodenDoor, texTemp;
+GLuint texWoodenDoor;
 GLuint texVodka, texCounter, texKangaroo, texZubr, texAmarena, texHarnas, texWino, texFur;
 
 
