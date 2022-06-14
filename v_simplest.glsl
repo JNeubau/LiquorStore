@@ -23,16 +23,16 @@ out vec4 n1;
 out vec4 v1;
 
 void main(void) {
-    vec4 lp = vec4(0, 0, 5, 0.02); //light position, world space
+    vec4 lp = vec4(0, 0, 5, 1); //light position, world space
     l = normalize(V * lp - V * M * vertex); //vector towards the light in eye space
     v = normalize(vec4(0, 0, 0, 1) - V * M * vertex); //vector towards the viewer in eye space
     n = normalize(V * M * normal); //normal vector in eye space
 
-    vec4 lp1 = vec4(0, 0, -5, 0.02); //light position, world space
+    vec4 lp1 = vec4(0, 0, -5, 1); //light position, world space
     l1 = normalize(V * lp1 - V * M * vertex); //vector towards the light in eye space
     v1 = normalize(vec4(0, 0, 0, 1) - V * M * vertex); //vector towards the viewer in eye space
     n1 = normalize(V * M * normal); //normal vector in eye space
-	iTexCoord0=texCoord0; //w main
+	iTexCoord0=texCoord0; 
     ic = color;
 
 	vec4 eyeN=normalize(V*M*normal);
