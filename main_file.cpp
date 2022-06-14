@@ -172,7 +172,6 @@ void initOpenGLProgram(GLFWwindow* window) {
 	texFloor = readTexture("pics/floor.png");
 	texCeiling = readTexture("pics/ceiling.png");
 	texWoodenDoor = readTexture("pics/wooden_door.png");
-	texTemp = readTexture("pics/floor_1.png");
 	texCounter = readTexture("pics/aditya-joshi-wG923J9naFQ-unsplash.png");
 	texKangaroo = readTexture("pics/Kangaroo_texture.png");
 	texVodka = readTexture("pics/zubrowka.png");
